@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>留言审核后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .tab {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .tab button.active {
+            background: #409eff;
+            color: white;
+            border-color: #409eff;
+        }
+        .msg-item {
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .msg-item .top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .msg-item .type {
+            color: #409eff;
+            font-weight: bold;
+        }
+        .msg-item .status {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .wait {
+            background: #fff7e6;
+            color: #d48806;
+        }
+        .pass {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        .msg-item .name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .msg-item .content {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        .msg-item .time {
+            font-size: 12px;
+            color: #999;
+        }
+        .btns {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .btns button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-pass {
+            background: #52c41a;
+            color: white;
+        }
+        .btn-wait {
+            background: #faad14;
+            color: white;
+        }
+        .btn-del {
+            background: #ff4d4f;
+            color: white;
+        }
+        a {
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>留言审核后台</h1>
+    <a href="index.html">返回前台留言板</a>
+
+    <div class="tab">
+        <button class="active" onclick="showAdminType('all')">全部</button>
+        <button onclick="showAdminType('wait')">待审核</button>
+        <button onclick="showAdminType('pass')">已通过</button>
+    </div>
+
+    <div id="adminList"></div>
+</div>
+
+<script>
+let adminStatus = 'all';
+
+function getAllMsg() {
+    return JSON.parse(localStorage.getItem('msgList') || '[]');
+}
+
+function renderAdmin() {
+    let list = getAllMsg();
+    if (adminStatus === 'wait') list = list.filter(i => i.status === 'wait');
+    if (adminStatus === 'pass') list = list.filter(i => i.status === 'pass');
+
+    let html = '';
+    if (list.length === 0) {
+        html = '<div style="text-align:center;padding:30px;color:#999">暂无留言</div>';
+    } else {
+        list.forEach(item => {
+            html += `
+            <div class="msg-item">
+                <div class="top">
+                    <span class="type">${item.type}</span>
+                    <span class="status ${item.status}">
+                        ${item.status === 'wait' ? '待审核' : '已通过'}
+                    </span>
+                </div>
+                <div class="name">${item.name}</div>
+                <div class="content">${item.content}</div>
+                <div class="time">${item.time}</div>
+                <div class="btns">
+                    <button class="btn-pass" onclick="setPass(${item.id})">设为可展示</button>
+                    <button class="btn-wait" onclick="setWait(${item.id})">取消展示</button>
+                    <button class="btn-del" onclick="delMsg(${item.id})">删除</button>
+                </div>
+            </div>
+            `;
+        });
+    }
+    document.getElementById('adminList').innerHTML = html;
+}
+
+function setPass(id) {
+    let list = getAllMsg();
+    list = list.map(i => i.id === id ? {...i, status: 'pass'} : i);
+    localStorage.setItem('msgList', JSON.stringify(list));
+    renderAdmin();
+}
+
+function setWait(id) {
+    let list = getAllMsg();
+    list = list.map(i => i.id === id ? {...i, status: 'wait'} : i);
+    localStorage.setItem('msgList', JSON.stringify(list));
+    renderAdmin();
+}
+
+function delMsg(id) {
+    if (!confirm('确定删除？')) return;
+    let list = getAllMsg();
+    list = list.filter(i => i.id !== id);
+    localStorage.setItem('msgList', JSON.stringify(list));
+    renderAdmin();
+}
+
+function showAdminType(status) {
+    adminStatus = status;
+    let btns = document.querySelectorAll('.tab button');
+    btns.forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderAdmin();
+}
+
+renderAdmin();
+</script>
+</body>
+</html>
